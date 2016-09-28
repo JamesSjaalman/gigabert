@@ -1,0 +1,4 @@
+gigabert : a collection of programs to process text files
+using Markov(5) chains, with the data stored in a (PostgreSQL) database.
+
+Hubertc: Tokenise text an store the result in the DB.
