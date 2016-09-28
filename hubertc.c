@@ -40,6 +40,13 @@ char *globwords[BIG_SIZE/2];
 size_t nline=0;
 size_t ndup=0;
 size_t nfree=0;
+/* Arguments:
+** argv[1] linenumber to start with
+**	(number of lines to skip)
+** argv[2] := NULL
+** Flags:
+**	-m mode
+*/
 /*********************************************************/
 int main(int argc, char **argv)
 {
@@ -95,6 +102,7 @@ for (nline=0; fgets(globbuff, sizeof globbuff, stdin); nline++) {
 	if (nline < sline) continue;
 	if (nline %1000 ==0) fprintf(stdout, "\n%zu:", nline);
 	if (nline %100 ==0) fputc('.', stdout);
+		/* tokenise */
 	nword = 1+splitit(globwords+1, globbuff);
 	globwords[nword++] = "<END>";
 	globwords[nword] = NULL;
@@ -105,6 +113,7 @@ for (nline=0; fgets(globbuff, sizeof globbuff, stdin); nline++) {
 	  tmp = globwords[idx];
 	  globwords[idx] = globwords[nword];
 	  globwords[nword] = tmp; }
+		/* add reverse chain */
 	addwords(conn, "zzz2", globwords, -1 );
 	}
 
