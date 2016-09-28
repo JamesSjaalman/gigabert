@@ -14,7 +14,7 @@
 
 // Login info (in include file ...)
 const char * keywords[] = {"host",   "dbname", "user", "password", NULL};
-const char * values[] =
+const char * values[] = /* this is a very silly way of storing credentials */
 #include "secret/login.dat"
 	;
 
