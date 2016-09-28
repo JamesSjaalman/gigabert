@@ -102,8 +102,8 @@ PQclear(desc);
 }
 #endif
 
-npar = PQnparams(exec);
 #if DUMP_PQ
+npar = PQnparams(exec);
 fprintf(stderr, "PQnparams = %d\n", npar);
 #endif
 
@@ -114,8 +114,8 @@ ncol = PQnfields(exec);
 fprintf(stderr, "PQdescribenfields = %d\n", ncol);
 #endif
 
-nrow = PQntuples(exec);
 #if DUMP_PQ
+nrow = PQntuples(exec);
 fprintf(stderr, "PQntuples = %d\n", nrow);
 #endif
 
