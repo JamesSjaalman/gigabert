@@ -3,6 +3,10 @@
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
+#include <getopt.h>
+extern char *optarg;
+extern int optind, opterr, optopt;
+
 #include <signal.h>
 
 #include <libpq-fe.h>
@@ -28,6 +32,8 @@ int addwords( PGconn *cp, char *tag, char **words, int dir);
 int fakestuff (char **arr );
 
 void handler (int signum);
+
+int mode = 0;
 /*********************************************************/
 #include "pgstuff.h"
 
@@ -52,9 +58,30 @@ int main(int argc, char **argv)
 {
 PGconn * conn; 
 PGresult *prep;
-int status;
+int opt, status;
 char *stmt1, *stmt2;
 size_t sline=0,nword,idx;
+
+while (1) {
+	opt = getopt(argc, argv, "m:");
+	switch (opt) {
+	case -1: goto done;
+	case 'm':
+		opt = sscanf(optarg, "%d", &mode);
+		if (opt < 1) goto err;
+		break;
+	case '?': fprintf(stderr, "No such option: %c\n", optopt);
+	case ':': fprintf(stderr, "Missing option data:%s\n", optarg);
+	err:
+		exit(1);
+		}
+	}
+done:
+fprintf(stderr, "Mode=%d, optind=%d argv[1]=%s, argv[optind]=%s\n"
+	, mode, optind, argv[1] ,argv[optind] );
+
+argv += optind;
+argc -= optind;
 
 
 signal(SIGHUP, handler);
@@ -70,8 +97,8 @@ set_script_dir("esql" );
 stmt1 = read_file("insert.sql");
 stmt2 = read_file("insert2.sql");
 
-if (argv[1] ) {
-	sscanf(argv[1] ,"%zu", &sline);
+if (argv[0] ) {
+	sscanf(argv[0] ,"%zu", &sline);
 	fprintf(stderr, "Starting at line=%zu\n", sline );
 	}
 
