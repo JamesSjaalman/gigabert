@@ -1,5 +1,5 @@
 
-CREATE USER tim password 'kuiken';
+\i users.sch
 DROP SCHEMA brein CASCADE;
 CREATE SCHEMA brein;
 GRANT usage on schema brein to public;
