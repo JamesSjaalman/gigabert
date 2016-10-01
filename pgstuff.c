@@ -15,6 +15,8 @@
 
 extern size_t ndup;
 static char *script_dir = NULL;
+static void strip_comments(char *buff);
+
 /*********************************************************/
 void set_script_dir(char *name)
 {
@@ -57,7 +59,76 @@ for (size=used=0; (ch=fgetc(fp)) != EOF; ) {
 	}
 if (!size) return NULL;
 result[used++] = 0;
+strip_comments(result);
+
 return result;
+}
+/*********************************************************/
+static void strip_comments(char *buff)
+{
+int state;
+char *cp;
+unsigned src,dst,len;
+
+for (state=0,src=dst=0; buff[src] ;src++ ){
+	// fprintf(stderr, "{%u <- %u} %d %c\n"
+		// , dst, src, state, buff[src] 
+		// );
+	switch(state) {
+	default: state = 0;
+	case 0: if (buff[src] == '-') {state = 1; continue; }
+		if (buff[src] == '\'') {state = 3; }
+		if (buff[src] == '\"') {state = 5; }
+		if (buff[src] == '/') {state = 8; continue; }
+		break;
+	case 1: if (buff[src] == '-') { state = 2; continue; }
+		buff[dst++] = '-'; state = 0;
+		break;
+	case 2: if (buff[src] == '\n') { state = 0; break; }
+		/* absorb ... */
+		continue;
+	case 3: /* inside 'string' */
+		if (buff[src] == '\n') { state = 0; break; }
+		if (buff[src] == '\'') {state = 0; break; }
+		if (buff[src] == '\\') {state = 4; break; }
+		break;
+	case 4: /* inside 'stri\xng' */
+		state = 3; break;
+	case 5: /* inside "string" */
+		if (buff[src] == '\n') { state = 0; break; }
+		if (buff[src] == '\"') {state = 0; break; }
+		if (buff[src] == '\\') {state = 6; break; }
+		break;
+	case 6: /* inside "stri\xng" */
+		state = 5; break;
+	case 8: /* after "/" */
+		if (buff[src] == '*') {state = 9; continue; }
+		buff[dst++] = '/'; state = 0;
+		break;
+	case 9: /* after "/*" */
+		if (buff[src] == '*') {state = 10; continue; }
+		continue;
+	case 10:
+		if (buff[src] == '*') {state = 10; continue; }
+		if (buff[src] == '/') {state = 0; continue; }
+		state = 9;
+		continue;
+		}
+assign:
+	if (dst != src) buff[dst] = buff[src];
+	dst++;
+	}
+switch (state) {
+case 8: buff[dst++] = '/'; break;
+case 1: buff[dst++] = '-'; break;
+case 0: 
+default: break;
+	}
+buff[dst] = 0;
+return;
+
+
+
 }
 /*********************************************************/
 PGresult *do_the_prepare(PGconn *pgc, char *tag, char *stmt, int nparam)

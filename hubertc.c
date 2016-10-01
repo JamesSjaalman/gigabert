@@ -59,7 +59,7 @@ int main(int argc, char **argv)
 PGconn * conn; 
 PGresult *prep;
 int opt, status;
-char *stmt1, *stmt2;
+char *stmt1, *stmt2, *stmt3;
 size_t sline=0,nword,idx;
 
 while (1) {
@@ -96,6 +96,8 @@ signal(SIGQUIT, handler);
 set_script_dir("esql" );
 stmt1 = read_file("insert.sql");
 stmt2 = read_file("insert2.sql");
+stmt3 = read_file("insert3.sql");
+fprintf(stderr, "stmt3 := \"%s\"\n" , stmt3 );
 
 if (argv[0] ) {
 	sscanf(argv[0] ,"%zu", &sline);
