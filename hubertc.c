@@ -297,7 +297,8 @@ for(rnk=1;	; rnk++) {
 	drie[2] = globwords[rnk];
 	subres = do_fetch_n ( cp, "zzz4", 3, drie);
 	if(glob_error) {
-		fprintf(stderr, "Drie := {%s,%s,'%s'}\n"
+		fprintf(stderr, "Words[] := {%s,%s} Drie := {%s,%s,'%s'}\n"
+		, words[0], words[1]
 		, drie[0], drie[1], drie[2] );
 		fprintf(stderr, "Subres := '%s'\n", subres );
 		}

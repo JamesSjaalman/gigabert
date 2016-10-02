@@ -67,9 +67,8 @@ return result;
 }
 
 /*********************************************************/
-/* libpq does not allow comments in the SQL that you feed
-** it.
-** This function removes both -- and \/\* comments,
+/* libpq does not allow comments in the SQL that you feed it.
+** This function removes both -- and /* comments,
 ** and attempts to respect 'strings' and "quoted identifiers"
 */
 static void strip_comments(char *buff)
