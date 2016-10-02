@@ -72,8 +72,6 @@ int opt, status;
 char *stmt1, *stmt2, *stmt3, *stmt4;
 size_t sline=0,nword,idx;
 
-// char * posts[2] = { "12345", "2016-10-02 18:30:00" };
-
 while (1) {
 	opt = getopt(argc, argv, "m:");
 	switch (opt) {
@@ -297,10 +295,12 @@ for(rnk=1;	; rnk++) {
 	sprintf(numbuff,"%d", rnk);
 	if (!globwords[rnk]) break;
 	drie[2] = globwords[rnk];
-	// fprintf(stderr, "Drie := {%s,%s,'%s'}\n"
-	// , drie[0], drie[1], drie[2] );
 	subres = do_fetch_n ( cp, "zzz4", 3, drie);
-	// fprintf(stderr, "Subres := '%s'\n", subres );
+	if(glob_error) {
+		fprintf(stderr, "Drie := {%s,%s,'%s'}\n"
+		, drie[0], drie[1], drie[2] );
+		fprintf(stderr, "Subres := '%s'\n", subres );
+		}
 	free (subres);
 	}
 

@@ -15,6 +15,8 @@
 
 extern size_t ndup;
 static char *script_dir = NULL;
+int glob_error = 0;
+
 static void strip_comments(char *buff);
 
 /*********************************************************/
@@ -114,7 +116,7 @@ for (state=0,src=dst=0; buff[src] ;src++ ){
 		if (buff[src] == '*') {state = 9; continue; }
 		buff[dst++] = '/'; state = 0;
 		break;
-	case 9: /* after "/*" */
+	case 9: /* after "/ *" */
 		if (buff[src] == '*') {state = 10; continue; }
 		continue;
 	case 10:
@@ -216,7 +218,6 @@ PQclear(exec);
 #if DUMP_PQ
 fprintf(stderr, "Nrow=%d\n", ridx);
 #endif
-
 }
 
 /********************************************************/
@@ -281,15 +282,16 @@ return zval;
 }
 
 /********************************************************/
-void show_pqerror(char *msg, PGresult *rp)
+int show_pqerror(char *msg, PGresult *rp)
 {
 int status;
 if (!msg) msg = "show_pqerror";
 
 if (!rp) {
 	fprintf(stderr, "%s: result IS NULL.\n", msg );
-	return;
+	return 0;
 	}
+glob_error = 0;
 status = PQresultStatus(rp);
 switch (status){
 case PGRES_COMMAND_OK: 
@@ -333,7 +335,9 @@ extra:
 		fprintf(stderr, "%s:%s\n"
 		, omg[ii].msg, err );
 		}
+	glob_error = 1; /* error */
 	}}
+return glob_error;
 }
 
 /********************************************************/
