@@ -41,7 +41,11 @@ int mode = 0;
 int keyfields = 0;
 /*********************************************************/
 #include "pgstuff.h"
-
+	/* This is not so nice:
+	** Including the tokeniser SOURCE here
+	** because it is static (can be inlined)
+	** , and it is shared with other programs
+	*/
 #include "tokenize.h"
 #include "tokenize.c"
 #define BIG_SIZE (16*1024)

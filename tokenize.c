@@ -1,7 +1,4 @@
 /*
- *		Function:	Tokenize
- *
- *		Purpose:		Find the length of the token started @ string
  * This tokeniser attempts to respect abbreviations such as R.W.A or R.w.a.
  * Also, numeric literals, such as 200.50 are left alone (almost the same for 200,50 or 200.000,00)
  * Maybe 10e-0.6 should also be recognised.
