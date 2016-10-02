@@ -63,7 +63,13 @@ strip_comments(result);
 
 return result;
 }
+
 /*********************************************************/
+/* libpq does not allow comments in the SQL that you feed
+** it.
+** This function removes both -- and \/\* comments,
+** and attempts to respect 'strings' and "quoted identifiers"
+*/
 static void strip_comments(char *buff)
 {
 int state;
@@ -101,6 +107,9 @@ for (state=0,src=dst=0; buff[src] ;src++ ){
 		break;
 	case 6: /* inside "stri\xng" */
 		state = 5; break;
+	case 7: /* react to comic noise */
+		fprintf(stderr, "There is no state#7. You lose...\n" );
+		break;
 	case 8: /* after "/" */
 		if (buff[src] == '*') {state = 9; continue; }
 		buff[dst++] = '/'; state = 0;
