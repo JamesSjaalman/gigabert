@@ -1,11 +1,27 @@
--- comment
-SELECT v.val -- tha value
-	, 'omg' AS "OMG"
-	, 'wtf-omg' AS "wtf-omg"
-	, 'embedded\'quote' AS "embedded\"quote"
-	/* inner comment -- ... */
-FROM (select 1 AS val) v
-/* JOIN pg_catalog.pg_class 
-	ON v."val" = c.cid AND c.name = 'OmG';
-	*/
+/*
+** insert /update posts
+** Arguments:
+** $1 := post_id
+** $2 := post_date
+** Return := seq
+*/
+WITH post_up AS (
+	UPDATE posts p
+	SET post_date = $2::TIMESTAMPTZ
+	WHERE p.post_id = $1::integer
+	RETURNING * -- AS 'aha!'
+	)
+, post_ins AS (
+	INSERT INTO posts (post_id, post_date)
+	SELECT $1,  $2
+	WHERE NOT EXISTS (SELECT * 
+		FROM post_up nx
+		WHERE nx.post_id = $1::integer)
+	RETURNING *
+	)
+SELECT seq -- , post_id, post_date
+FROM post_up
+UNION ALL
+SELECT seq -- , post_id, post_date
+FROM post_ins
 	;

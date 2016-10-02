@@ -1,3 +1,9 @@
+/*
+** Insert or update a node and/or token into the markov tree
+** Arguments:
+** $1 := node number for parent number
+** $2 := token (text)
+*/
 WITH tok_i AS (
 	INSERT INTO brein.token (ttext,ncnt, rcnt)
 	SELECT $2::varchar, 1 , 1

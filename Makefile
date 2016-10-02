@@ -10,6 +10,12 @@ all: hubertc # gigahal
 clean:
 	@rm hubertc.o gigahal.o $(OBJS) hubertc gigahal
 
+test4: hubertc
+	./hubertc -m 4 0 < data/test2.dat
+
+test7: hubertc
+	./hubertc -m 7 0 < data/test2.dat
+
 hubertc: hubertc.o $(OBJS)
 	$(CC) $(LDFLAGS) -o $@ $< $(OBJS) -l$(LIBS)
 

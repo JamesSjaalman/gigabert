@@ -1,2 +1,5 @@
 secret/
 schema/users.sch
+esql/instwo.psql
+esql/instwo.sql
+esql/insert0.sql

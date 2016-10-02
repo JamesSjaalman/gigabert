@@ -126,10 +126,8 @@ default: break;
 	}
 buff[dst] = 0;
 return;
-
-
-
 }
+
 /*********************************************************/
 PGresult *do_the_prepare(PGconn *pgc, char *tag, char *stmt, int nparam)
 {
@@ -215,11 +213,17 @@ fprintf(stderr, "Nrow=%d\n", ridx);
 /********************************************************/
 char *do_fetch_one(PGconn *pgc, char *tag, char **pair)
 {
+return do_fetch_n(pgc, tag, 2, pair);
+}
+
+/********************************************************/
+char *do_fetch_n(PGconn *pgc, char *tag, unsigned nvar, char **vars)
+{
 PGresult *result;
 int nrow,ncol, cidx, ridx;
 char *zval;
 
-result = PQexecPrepared(pgc, tag, 2, pair, NULL, NULL, 0);
+result = PQexecPrepared(pgc, tag, nvar, vars, NULL, NULL, 0);
 #if DUMP_PQ
 fprintf(stderr, "PQexecPrepared = %p\n", result);
 #endif
@@ -294,14 +298,33 @@ case PGRES_EMPTY_QUERY:
 	break;
 case PGRES_BAD_RESPONSE: 
 	fprintf(stderr, "%s (%p) := PGRES_BAD_RESPONSE\n", msg, rp);
+	goto extra;
 	break;
 case PGRES_FATAL_ERROR: 
 	fprintf(stderr, "%s (%p) := PGRES_FATAL_ERROR\n",msg,  rp);
+	goto extra;
 	break;
 default:
 	fprintf(stderr, "%s (%p) Status:=%d\n", msg, rp, status);
 	break;
-	}
+extra:
+	{
+	struct { char *msg; int code;} omg[] =
+		{ { "SEVERITY", PG_DIAG_SEVERITY}
+		, { "SQLSTATE", PG_DIAG_SQLSTATE}
+		, { "PRIMARY", PG_DIAG_MESSAGE_PRIMARY}
+		, { "DETAIL", PG_DIAG_MESSAGE_DETAIL}
+		, { "HINT", PG_DIAG_MESSAGE_HINT}
+		};
+	int ii;
+	char *err;
+	fprintf(stderr, "%s\n" , PQresultErrorMessage(rp) );
+	for (ii=0; ii < 5; ii++) {
+		err =  PQresultErrorField(rp, omg[ii].code);
+		fprintf(stderr, "%s:%s\n"
+		, omg[ii].msg, err );
+		}
+	}}
 }
 
 /********************************************************/
@@ -315,38 +338,37 @@ if (!conn) {
 	}
 status = PQstatus (conn);
 
-  switch (status)
-    {
-    case CONNECTION_STARTED:
-      fprintf(stderr, "%s: Waiting for connection to be made.\n", msg );
-      break;
+switch (status) {
+case CONNECTION_STARTED:
+	fprintf(stderr, "%s: Waiting for connection to be made.\n", msg );
+	break;
 
-    case CONNECTION_MADE:
-      fprintf(stderr, "%s: Connection OK; waiting to send.\n", msg );
-      break;
+case CONNECTION_MADE:
+	fprintf(stderr, "%s: Connection OK; waiting to send.\n", msg );
+	break;
 
-    case CONNECTION_AWAITING_RESPONSE:
-      fprintf(stderr, "%s: Waiting for a response from the server.\n", msg );
-      break;
+case CONNECTION_AWAITING_RESPONSE:
+	fprintf(stderr, "%s: Waiting for a response from the server.\n", msg );
+	break;
 
-    case CONNECTION_AUTH_OK:
-      fprintf(stderr, "%s: Received authentication; waiting for backend start-up to finish.\n", msg );
-      break;
+case CONNECTION_AUTH_OK:
+	fprintf(stderr, "%s: Received authentication; waiting for backend start-up to finish.\n", msg );
+	break;
 
-    case CONNECTION_SSL_STARTUP:
-      fprintf(stderr, "%s: Negotiating SSL encryption.\n", msg );
-      break;
+case CONNECTION_SSL_STARTUP:
+	fprintf(stderr, "%s: Negotiating SSL encryption.\n", msg );
+	break;
 
-    case CONNECTION_SETENV:
-      fprintf(stderr, "%s: Negotiating environment-driven parameter settings.\n", msg );
-      break;
-    case CONNECTION_OK:
-    // case 0 :
-      fprintf(stderr, "%s: The state returned was Ok.\n", msg );
-      break;
-    default :
-      fprintf(stderr, "%s: connecting ... status code :%d\n", msg , status );
-    } 
+case CONNECTION_SETENV:
+	fprintf(stderr, "%s: Negotiating environment-driven parameter settings.\n", msg );
+	break;
+case CONNECTION_OK:
+// case 0 :
+	fprintf(stderr, "%s: The state returned was Ok.\n", msg );
+	break;
+default :
+	fprintf(stderr, "%s: connecting ... status code :%d\n", msg , status );
+	} 
 return status;
 } 
 
