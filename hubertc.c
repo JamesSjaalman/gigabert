@@ -300,7 +300,8 @@ for(rnk=1;	; rnk++) {
 		fprintf(stderr, "Words[] := {%s,%s} Drie := {%s,%s,'%s'}\n"
 		, words[0], words[1]
 		, drie[0], drie[1], drie[2] );
-		fprintf(stderr, "Subres := '%s'\n", subres );
+		// appears to be binary ..
+		// fprintf(stderr, "Subres := '%s'\n", subres );
 		}
 	free (subres);
 	}

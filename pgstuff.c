@@ -230,7 +230,7 @@ char *do_fetch_n(PGconn *pgc, char *tag, unsigned nvar, char **vars)
 {
 PGresult *result;
 int nrow,ncol, cidx, ridx;
-char *zval;
+char *zval = "Nothing!";
 
 result = PQexecPrepared(pgc, tag, nvar, vars, NULL, NULL, 0);
 #if DUMP_PQ
