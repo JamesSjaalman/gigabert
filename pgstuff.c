@@ -17,7 +17,7 @@ extern size_t ndup;
 static char *script_dir = NULL;
 int glob_error = 0;
 
-static void strip_comments(char *buff);
+static size_t strip_comments(char *buff);
 
 /*********************************************************/
 void set_script_dir(char *name)
@@ -60,8 +60,10 @@ for (size=used=0; (ch=fgetc(fp)) != EOF; ) {
 	if (ch == ';') break;
 	}
 if (!size) return NULL;
+
 result[used++] = 0;
-strip_comments(result);
+used = strip_comments(result);
+result = realloc(result, used+1);
 
 return result;
 }
@@ -71,7 +73,7 @@ return result;
 ** This function removes both -- and /* comments,
 ** and attempts to respect 'strings' and "quoted identifiers"
 */
-static void strip_comments(char *buff)
+static size_t strip_comments(char *buff)
 {
 int state;
 char *cp;
@@ -135,7 +137,7 @@ case 0:
 default: break;
 	}
 buff[dst] = 0;
-return;
+return dst;
 }
 
 /*********************************************************/
