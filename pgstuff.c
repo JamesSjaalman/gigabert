@@ -72,6 +72,9 @@ return result;
 /* libpq does not allow comments in the SQL that you feed it.
 ** This function removes both -- and /* comments,
 ** and attempts to respect 'strings' and "quoted identifiers"
+** The return value is the number of active characters in the
+** buffer, it *does not* include the trailing '\0'
+** [similar to strlen() et.al ]
 */
 static size_t strip_comments(char *buff)
 {
@@ -101,14 +104,14 @@ for (state=0,src=dst=0; buff[src] ;src++ ){
 		if (buff[src] == '\'') {state = 0; break; }
 		if (buff[src] == '\\') {state = 4; break; }
 		break;
-	case 4: /* inside 'stri\xng' */
+	case 4: /* seen backslash inside 'string' */
 		state = 3; break;
 	case 5: /* inside "string" */
 		if (buff[src] == '\n') { state = 0; break; }
 		if (buff[src] == '\"') {state = 0; break; }
 		if (buff[src] == '\\') {state = 6; break; }
 		break;
-	case 6: /* inside "stri\xng" */
+	case 6: /* seen backslash inside "string" */
 		state = 5; break;
 	case 7: /* react to comic noise */
 		fprintf(stderr, "There is no state#7. You lose...\n" );
@@ -117,7 +120,7 @@ for (state=0,src=dst=0; buff[src] ;src++ ){
 		if (buff[src] == '*') {state = 9; continue; }
 		buff[dst++] = '/'; state = 0;
 		break;
-	case 9: /* after "/ *" */
+	case 9: /* after / * */
 		if (buff[src] == '*') {state = 10; continue; }
 		continue;
 	case 10:
@@ -126,16 +129,23 @@ for (state=0,src=dst=0; buff[src] ;src++ ){
 		state = 9;
 		continue;
 		}
+	/* breaks from the switch end up here ... */
 assign:
 	if (dst != src) buff[dst] = buff[src];
 	dst++;
 	}
+
+	/* wind-eieren
+	** (these are impossible in SQL, but we
+	** are not concerned about SQL here)
+	*/
 switch (state) {
 case 8: buff[dst++] = '/'; break;
 case 1: buff[dst++] = '-'; break;
 case 0: 
 default: break;
 	}
+
 buff[dst] = 0;
 return dst;
 }
