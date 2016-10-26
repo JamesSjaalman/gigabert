@@ -2,3 +2,9 @@ gigabert : a collection of programs to process text files
 using Markov(5) chains, with the data stored in a (PostgreSQL) database.
 
 Hubertc: Tokenise text an store the result in the DB.
+
+The tokens are stored
+ - as tokens (Duh!)
+ - as markov-nodes, referring to the tokens, both forward and backward
+ - als posts (articles / documents)
+ - as posts_token N:M table
