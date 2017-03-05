@@ -17,8 +17,8 @@ extern int optind, opterr, optopt;
 #define STATIC static
 
 // Login info (in include file ...)
-const char * keywords[] = {"host",   "dbname", "user", "password", NULL};
-const char * values[] = /* this is a very silly way of storing credentials */
+const char * login_keywords[] = {"host",   "dbname", "user", "password", NULL};
+const char * login_values[] = /* this is a very silly way of storing credentials */
 #include "secret/login.dat"
 	;
 
@@ -122,7 +122,7 @@ if (argv[0] ) {
 	}
 
 // Connect to the database
-conn = PQconnectdbParams (keywords, values, 0);
+conn = PQconnectdbParams (login_keywords, login_values, 0);
 fprintf(stderr, "\nMypid %d Conn= %p\n", (int) getpid(), (void*) conn );
 while(1)	{
 	status = analyse_PQstatus ("PQconnectdbParams", conn);
@@ -132,6 +132,11 @@ while(1)	{
 
 prep = PQexec(conn, "SET search_path = brein;" );
 show_pqerror("searchpath", prep);
+PQclear(prep);
+
+/* 20170305 */
+prep = PQexec(conn, "SET client_encoding = latin1;" );
+show_pqerror("client_encoding", prep);
 PQclear(prep);
 
 // Prepare query

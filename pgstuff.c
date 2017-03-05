@@ -70,16 +70,15 @@ return result;
 
 /*********************************************************/
 /* libpq does not allow comments in the SQL that you feed it.
-** This function removes both -- and /* comments,
+** This function removes both -- and / * comments,
 ** and attempts to respect 'strings' and "quoted identifiers"
 */
 static size_t strip_comments(char *buff)
 {
 int state;
-char *cp;
-unsigned src,dst,len;
+unsigned src,dst,nest;
 
-for (state=0,src=dst=0; buff[src] ;src++ ){
+for (state=0,nest=src=dst=0; buff[src] ;src++ ){
 	// fprintf(stderr, "{%u <- %u} %d %c\n"
 		// , dst, src, state, buff[src] 
 		// );
@@ -89,7 +88,9 @@ for (state=0,src=dst=0; buff[src] ;src++ ){
 		if (buff[src] == '\'') {state = 3; }
 		if (buff[src] == '\"') {state = 5; }
 		if (buff[src] == '/') {state = 8; continue; }
-		break;
+		/* skip the BOM (but only in state==0 ...) */
+		if ( !memcmp("\xEF\xBB\xBF", buff+src, 3)) {src += 2; continue; }
+		goto assign; /* the same as "break" */
 	case 1: if (buff[src] == '-') { state = 2; continue; }
 		buff[dst++] = '-'; state = 0;
 		break;
@@ -114,7 +115,7 @@ for (state=0,src=dst=0; buff[src] ;src++ ){
 		fprintf(stderr, "There is no state#7. You lose...\n" );
 		break;
 	case 8: /* after "/" */
-		if (buff[src] == '*') {state = 9; continue; }
+		if (buff[src] == '*') {state = 9; nest++; continue; }
 		buff[dst++] = '/'; state = 0;
 		break;
 	case 9: /* after "/ *" */
@@ -122,11 +123,11 @@ for (state=0,src=dst=0; buff[src] ;src++ ){
 		continue;
 	case 10:
 		if (buff[src] == '*') {state = 10; continue; }
-		if (buff[src] == '/') {state = 0; continue; }
+		if (buff[src] == '/') {state = --nest ? 9: 0; continue; }
 		state = 9;
 		continue;
 		}
-assign:
+assign: /* (label not used) :: breaks from the switch end up here ... */
 	if (dst != src) buff[dst] = buff[src];
 	dst++;
 	}
@@ -159,14 +160,15 @@ return prep;
 void do_the_execute(PGconn *pgc, char *tag, char **params, int nparam)
 {
 PGresult *exec;
-int npar, nrow,ncol, cidx, ridx;
+int ncol, cidx, ridx;
 char *zval;
 
 #if DUMP_PQ
 fprintf(stderr, "do_the_execute nparam=%d\n", nparam);
 #endif
 
-exec = PQexecPrepared(pgc, tag, nparam, params, NULL, NULL, 0);
+	/* suppress silly warning for const argument ... */
+exec = PQexecPrepared(pgc, tag, nparam, (const char * const*) params, NULL, NULL, 0);
 #if DUMP_PQ
 fprintf(stderr, "PQexecPrepared = %p\n", exec);
 #endif
@@ -184,8 +186,10 @@ PQclear(desc);
 #endif
 
 #if DUMP_PQ
+{ int npar;
 npar = PQnparams(exec);
 fprintf(stderr, "PQnparams = %d\n", npar);
+}
 #endif
 
 // zz = PQparamtype(rp);
@@ -196,8 +200,10 @@ fprintf(stderr, "PQdescribenfields = %d\n", ncol);
 #endif
 
 #if DUMP_PQ
+{ int nrow;
 nrow = PQntuples(exec);
 fprintf(stderr, "PQntuples = %d\n", nrow);
+}
 #endif
 
 
@@ -234,7 +240,7 @@ PGresult *result;
 int nrow,ncol, cidx, ridx;
 char *zval = "Nothing!";
 
-result = PQexecPrepared(pgc, tag, nvar, vars, NULL, NULL, 0);
+result = PQexecPrepared(pgc, tag, nvar, (const char * const*) vars, NULL, NULL, 0);
 #if DUMP_PQ
 fprintf(stderr, "PQexecPrepared = %p\n", result);
 #endif
