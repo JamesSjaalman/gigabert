@@ -57,7 +57,6 @@ for (size=used=0; (ch=fgetc(fp)) != EOF; ) {
 		size = newsize;
 		}
 	result[used++] = ch;
-	if (ch == ';') break;
 	}
 if (!size) return NULL;
 
@@ -89,7 +88,9 @@ for (state=0,nest=src=dst=0; buff[src] ;src++ ){
 		if (buff[src] == '\"') {state = 5; }
 		if (buff[src] == '/') {state = 8; continue; }
 		/* skip the BOM (but only in state==0 ...) */
-		if ( !memcmp("\xEF\xBB\xBF", buff+src, 3)) {src += 2; continue; }
+		if ( !memcmp("\xEF\xBB\xBF", buff+src, 3)) {src += 2; continue;}
+		/* libpg does not support multi-statement SQL; */
+		if (buff[src] == ';') goto quit;
 		goto assign; /* the same as "break" */
 	case 1: if (buff[src] == '-') { state = 2; continue; }
 		buff[dst++] = '-'; state = 0;
@@ -131,6 +132,7 @@ assign: /* (label not used) :: breaks from the switch end up here ... */
 	if (dst != src) buff[dst] = buff[src];
 	dst++;
 	}
+quit:
 switch (state) {
 case 8: buff[dst++] = '/'; break;
 case 1: buff[dst++] = '-'; break;

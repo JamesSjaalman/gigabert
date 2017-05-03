@@ -19,13 +19,13 @@ test7: hubertc
 hubertc: hubertc.o $(OBJS)
 	$(CC) $(LDFLAGS) -o $@ $< $(OBJS) -l$(LIBS)
 
+hubertc.o: hubertc.c
+
+pgstuff.o: pgstuff.c
+
 #gigahal: gigahal.o $(OBJS)
 #	$(CC) $(LDFLAGS) -o $@ $< $(OBJS) -l$(LIBS)
 
-hubertc.o: hubertc.c
-
 #gigahal.o: gigahal.c
-
-pgstuff.o: pgstuff.c
 
 #### Eof
