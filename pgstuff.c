@@ -17,7 +17,7 @@ extern size_t ndup;
 static char *script_dir = NULL;
 int glob_error = 0;
 
-static size_t strip_comments(char *buff);
+static size_t strip_comments(char *buff, size_t len);
 
 /*********************************************************/
 void set_script_dir(char *name)
@@ -61,7 +61,7 @@ for (size=used=0; (ch=fgetc(fp)) != EOF; ) {
 if (!size) return NULL;
 
 result[used++] = 0;
-used = strip_comments(result);
+used = strip_comments(result,used);
 result = realloc(result, used+1);
 
 return result;
@@ -72,12 +72,16 @@ return result;
 ** This function removes both -- and / * comments,
 ** and attempts to respect 'strings' and "quoted identifiers"
 */
-static size_t strip_comments(char *buff)
+static size_t strip_comments(char *buff, size_t len)
 {
 int state;
 unsigned src,dst,nest;
 
-for (state=0,nest=src=dst=0; buff[src] ;src++ ){
+if(!len) len=strlen(buff);
+/* skip the BOM (but only in state==0 ...) */
+if (len >=3 && !memcmp("\xEF\xBB\xBF", buff, 3)) src = 3;
+else src=0;
+for (state=0,nest=dst=0; buff[src] ;src++ ){
 	// fprintf(stderr, "{%u <- %u} %d %c\n"
 		// , dst, src, state, buff[src] 
 		// );
@@ -87,8 +91,6 @@ for (state=0,nest=src=dst=0; buff[src] ;src++ ){
 		if (buff[src] == '\'') {state = 3; }
 		if (buff[src] == '\"') {state = 5; }
 		if (buff[src] == '/') {state = 8; continue; }
-		/* skip the BOM (but only in state==0 ...) */
-		if ( !memcmp("\xEF\xBB\xBF", buff+src, 3)) {src += 2; continue;}
 		/* libpg does not support multi-statement SQL; */
 		if (buff[src] == ';') goto quit;
 		goto assign; /* the same as "break" */
